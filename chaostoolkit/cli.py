@@ -667,7 +667,6 @@ def add_global_provider_type_to_experiment(experiment:dict):
             if isinstance(d,dict):
                 if "provider" in d:
                     provider = d.get("provider")
-                    print("adding!!", provider)
                     if "type" not in provider:
                         provider["type"] = updated_experiment.get("experiment-type")
                 for v in d.values():
