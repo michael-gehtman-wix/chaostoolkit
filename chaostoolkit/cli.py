@@ -5,6 +5,7 @@ import os
 import re
 from typing import List
 import uuid
+import copy
 
 from chaoslib import __version__ as chaoslib_version
 from chaoslib.control import load_global_controls
@@ -115,6 +116,8 @@ def run(ctx: click.Context, source: str, journal_path: str = "./journal.json",
     try:
         experiment = load_experiment(
             source, settings, verify_tls=not no_verify_tls)
+        if "experiment-type" in experiment:
+            experiment = add_global_provider_type_to_experiment(experiment)
     except InvalidSource as x:
         logger.error(str(x))
         logger.debug(x)
@@ -656,3 +659,22 @@ def add_activities(activities: List[Activity], pool: List[Activity],
     if not click.confirm(m):
         return
     add_activities(activities, pool)
+    
+def add_global_provider_type_to_experiment(experiment:dict):
+    updated_experiment = copy.deepcopy(experiment)
+    try:
+        def recursively_add_type(d):
+            if isinstance(d,dict):
+                if "provider" in d:
+                    provider = d.get("provider")
+                    if "type" not in provider:
+                        provider["type"] = updated_experiment.get("experiment-type")
+                for v in d.values():
+                    recursively_add_type(v)
+            elif isinstance(d,list):
+             for v in d:
+                 recursively_add_type(v)
+        recursively_add_type(updated_experiment)
+        return updated_experiment
+    except Exception:
+        return experiment
